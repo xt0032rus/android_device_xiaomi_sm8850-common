@@ -4,4 +4,5 @@
 service vendor.alsd /vendor/bin/hw/alsd
     class hal
     user system
-    group system graphics
+    group system
+    shutdown critical
