@@ -1,0 +1,9 @@
+type hal_misys, domain;
+type hal_misys_exec, exec_type, vendor_file_type, file_type;
+
+type hal_misys_service, hal_service_type, service_manager_type;
+
+binder_use(hal_misys)
+init_daemon_domain(hal_misys)
+
+allow hal_misys hal_misys_service:service_manager { add find };
