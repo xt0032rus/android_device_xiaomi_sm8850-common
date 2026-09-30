@@ -348,7 +348,11 @@ PRODUCT_COPY_FILES += \
 # Soong namespaces
 PRODUCT_SOONG_NAMESPACES += \
     $(LOCAL_PATH) \
-    hardware/xiaomi
+    hardware/xiaomi \
+    hardware/qcom-caf/sm8850/display
+
+TARGET_QCOM_DISPLAY_VARIANT := sm8850
+PRODUCT_SOONG_NAMESPACES += hardware/qcom-caf/$(TARGET_QCOM_DISPLAY_VARIANT)/display
 
 PRODUCT_PACKAGES += \
     extphonelib \
