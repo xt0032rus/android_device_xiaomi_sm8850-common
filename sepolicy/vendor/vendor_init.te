@@ -3,3 +3,4 @@ allow vendor_init vendor_v4a_audio_data_file:dir create_dir_perms;
 allow vendor_init vendor_v4a_audio_data_file:file create_file_perms;
 
 allow vendor_init migt_dev:chr_file getattr;
+allow vendor_init vendor_miev_device:chr_file getattr;

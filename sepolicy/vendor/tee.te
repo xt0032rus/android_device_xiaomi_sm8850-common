@@ -1,3 +1,6 @@
 allow tee mnt_vendor_file:file r_file_perms;
 
+# qseecomd scans the GPT/XBL/boot LUNs to find its partitions
+allow tee { vendor_gpt_block_device vendor_xbl_block_device boot_block_device }:blk_file r_file_perms;
+
 type_transition tee vendor_persist_data_file:dir vendor_persist_data_file;
