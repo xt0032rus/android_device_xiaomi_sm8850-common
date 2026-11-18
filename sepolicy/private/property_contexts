@@ -1,0 +1,11 @@
+# Read-only HyperOS settings queried by the vendor radio and audio HALs.
+ro.miui.customized.region u:object_r:exported_system_prop:s0 exact string
+ro.miui.support_submix_multichannel u:object_r:exported_system_prop:s0 exact bool
+
+# Debug configuration read as integers by the two vendor audio effects.
+audio.apmisound.dump.switch u:object_r:audio_config_prop:s0 exact int
+audio.spatializer.dump.switch u:object_r:audio_config_prop:s0 exact int
+
+# The dynamic sensor HAL reads these when it allocates its handle range.
+sensor.dynamic_sensor_hal.handle_base u:object_r:sensors_hal_prop:s0 exact int
+sensor.dynamic_sensor_hal.handle_count u:object_r:sensors_hal_prop:s0 exact int
