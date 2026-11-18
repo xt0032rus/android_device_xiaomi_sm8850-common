@@ -1,5 +1,13 @@
 get_prop(vendor_wcnss_service, vendor_radio_prop)
 
+type vendor_myron_wlan_persist_file, file_type, vendor_persist_type;
+type vendor_myron_bt_mac_file, file_type, vendor_persist_type;
+allow vendor_wcnss_service vendor_myron_wlan_persist_file:dir { search write add_name };
+allow vendor_wcnss_service vendor_myron_wlan_persist_file:file { create getattr open read write };
+allow vendor_wcnss_service vendor_persist_bluetooth_file:dir search;
+allow vendor_wcnss_service vendor_myron_bt_mac_file:file r_file_perms;
+allow hal_bluetooth_default vendor_myron_bt_mac_file:file create_file_perms;
+
 allow vendor_wcnss_service mnt_vendor_file:dir { add_name create read search write };
 allow vendor_wcnss_service mnt_vendor_file:file { create open read setattr write };
 allow vendor_wcnss_service vendor_data_file:dir { w_dir_perms getattr read setattr };

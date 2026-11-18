@@ -64,6 +64,7 @@ on fs
     chown root system /mnt/vendor/persist
     chmod 0771 /mnt/vendor/persist
     restorecon_recursive /mnt/vendor/persist
+    restorecon --force /mnt/vendor/persist/data/pfm/check.bin
     mkdir /mnt/vendor/persist/secnvm 0770 system system
     mkdir /mnt/vendor/persist/data 0700 system system
     # mount ext4 /dev/block/bootdevice/by-name/rescue /mnt/rescue noatime
@@ -438,6 +439,7 @@ on post-fs-data
     # use nv mac
     mkdir /data/vendor/mac_addr 0770 system wifi
     mkdir /mnt/vendor/persist/wlan 0770 system wifi
+    restorecon /mnt/vendor/persist/wlan
     chmod 0660 /dev/ir_spi
     chown system system /dev/ir_spi
     # add wlan log output path
@@ -686,7 +688,7 @@ on property:persist.vendor.tcpdump.enable=false
 service vendor.nv_mac /vendor/bin/nv_mac
     class late_start
     user system
-    group system inet net_admin wifi net_raw
+    group system inet net_admin wifi net_raw bluetooth
     oneshot
 
 on early-boot && property:persist.vendor.pcie.boot_option=*

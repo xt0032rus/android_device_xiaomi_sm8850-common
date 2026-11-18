@@ -25,7 +25,6 @@ on post-fs-data
 
     # ViPER4Android AIDL shared-memory channel
     mkdir /data/vendor/audiox 0777 audioserver audio
-    exec u:r:vendor_init:s0 -- /vendor/bin/sh /vendor/bin/init.v4a.sh
     mkdir /persist/mi_fp 0770 system system
     mkdir /mnt/vendor/persist/mi_fp 0770 system system
     mkdir /data/vendor/fpc 0770 system system

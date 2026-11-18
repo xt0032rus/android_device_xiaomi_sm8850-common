@@ -462,6 +462,8 @@ PRODUCT_PACKAGES += \
     firmware_WCNSS_qcom_cfg.ini_symlink
 
 # LunarisDolby
+# Shipping devices use the AIDL DMS service from the vendor image.
+TARGET_DOLBY_SKIP_LEGACY_DMS := true
 $(call inherit-product, vendor/lunaris/dolby/dolby.mk)
 
 # Block GKI modules superseded by platform-specific modules.
