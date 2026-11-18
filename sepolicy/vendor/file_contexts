@@ -33,6 +33,11 @@
 /mnt/vendor/persist/camera(/.*)? u:object_r:camera_persist_file:s0
 /mnt/vendor/persist/wlan u:object_r:vendor_myron_wlan_persist_file:s0
 /mnt/vendor/persist/wlan/wlan_mac\.bin u:object_r:vendor_myron_wlan_persist_file:s0
+/mnt/vendor/persist/mitee/data(/.*)? u:object_r:mitee_sfs_file:s0
+/data/vendor/mitee(/.*)? u:object_r:mitee_data_file:s0
+/odm/bin/tee-supplicant u:object_r:tee_exec:s0
+/dev/tee0 u:object_r:mitee_client_device:s0
+/dev/teepriv0 u:object_r:mitee_client_device:s0
 /mnt/vendor/persist/bluetooth/\.bt_nv\.bin u:object_r:vendor_myron_bt_mac_file:s0
 /odm/lib(64)?/libmialgo_utils\.so                        u:object_r:same_process_hal_file:s0
 /odm/lib(64)?/libmiocr\.so                               u:object_r:same_process_hal_file:s0

@@ -250,3 +250,4 @@ persist.vendor.bt.a2dp_offload_cap u:object_r:vendor_bt_a2dp_offload_prop:s0
 
 # mi_thermald sets this after boot
 vendor.sys.thermal.bcl.boot_completed u:object_r:vendor_thermal_normal_prop:s0
+vendor.teefs_state u:object_r:vendor_mitee_prop:s0 exact string
