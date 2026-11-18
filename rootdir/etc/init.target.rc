@@ -64,7 +64,7 @@ on fs
     chown root system /mnt/vendor/persist
     chmod 0771 /mnt/vendor/persist
     restorecon_recursive /mnt/vendor/persist
-    restorecon --force /mnt/vendor/persist/data/pfm/check.bin
+    restorecon --force /mnt/vendor/persist/data/pfm/check.bin /mnt/vendor/persist/data/pfm/check.bin.old
     mkdir /mnt/vendor/persist/secnvm 0770 system system
     mkdir /mnt/vendor/persist/data 0700 system system
     # mount ext4 /dev/block/bootdevice/by-name/rescue /mnt/rescue noatime
@@ -405,10 +405,7 @@ on post-fs-data
     chown root system /dev/xr_fbt
     chmod 666 /dev/xr_fbt
 
-    # Wait (2 second at most) for 'inherit_enable/sched_enable' entry to be created
-    wait /sys/kernel/qos_inherit/inherit_enable 2
-    wait /sys/kernel/qos_sched/sched_enable 2
-    wait /sys/kernel/speedlock/sl_enable 2
+    # These nodes are optional on source-built kernels.
     chmod 0660 /sys/kernel/qos_inherit/inherit_enable
     chmod 0660 /sys/kernel/qos_sched/sched_enable
     chmod 0660 /sys/kernel/speedlock/sl_enable
@@ -694,12 +691,6 @@ service vendor.nv_mac /vendor/bin/nv_mac
 on early-boot && property:persist.vendor.pcie.boot_option=*
     write /sys/bus/platform/devices/1c00000.qcom,pcie/debug/boot_option ${persist.vendor.pcie.boot_option}
     write /sys/bus/platform/devices/1c08000.qcom,pcie/debug/boot_option ${persist.vendor.pcie.boot_option}
-
-service fatal_err_check /vendor/bin/check_fatal_err.sh
-    class late_start
-    user root
-    group root
-    oneshot
 
 on property:vendor.bluetooth.startwdsdaemon=true
     start vendor.bt_wdsdaemon
