@@ -72,7 +72,6 @@ lib_fixups: lib_fixups_user_type = {
     ): lib_fixup_vendor_suffix,
     (
         'libcamxcommonutils',
-        'libframemaster',
         'libmialgo',
         'vendor.xiaomi.hardware.aon.auth-V1-ndk',
     ): lib_fixup_remove,
