@@ -250,4 +250,20 @@ persist.vendor.bt.a2dp_offload_cap u:object_r:vendor_bt_a2dp_offload_prop:s0
 
 # mi_thermald sets this after boot
 vendor.sys.thermal.bcl.boot_completed u:object_r:vendor_thermal_normal_prop:s0
-vendor.teefs_state u:object_r:vendor_mitee_prop:s0 exact string
+
+# MiTEE and Qualcomm VM state
+ro.boot.tee_type                  u:object_r:vendor_mitee_prop:s0 exact string
+ro.vendor.mitee_support           u:object_r:vendor_mitee_prop:s0 exact string
+vendor.mitee_vm.boot_completed    u:object_r:vendor_mitee_prop:s0 exact string
+vendor.mitee_vm.rpmb_state         u:object_r:vendor_mitee_prop:s0 exact string
+vendor.teefs_state                u:object_r:vendor_mitee_prop:s0 exact string
+vendor.qvirtmgr.oemvm.status       u:object_r:vendor_mi_qvirtmgr_prop:s0 exact string
+vendor.qvirtmgr.trustedvm.status   u:object_r:vendor_mi_qvirtmgr_prop:s0 exact string
+
+# MiFace
+persist.vendor.debug.miface. u:object_r:vendor_miface_debug_prop:s0
+persist.vendor.miface.       u:object_r:vendor_miface_prop:s0
+ro.vendor.debug.miface.      u:object_r:vendor_miface_debug_prop:s0
+ro.vendor.miface.            u:object_r:vendor_miface_prop:s0
+vendor.debug.miface.         u:object_r:vendor_miface_debug_prop:s0
+vendor.miface.               u:object_r:vendor_miface_prop:s0

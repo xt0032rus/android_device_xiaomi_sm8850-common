@@ -35,7 +35,8 @@
 /mnt/vendor/persist/wlan/wlan_mac\.bin u:object_r:vendor_myron_wlan_persist_file:s0
 /mnt/vendor/persist/mitee/data(/.*)? u:object_r:mitee_sfs_file:s0
 /data/vendor/mitee(/.*)? u:object_r:mitee_data_file:s0
-/odm/bin/tee-supplicant u:object_r:tee_exec:s0
+/(odm|vendor/odm)/bin/tee-supplicant u:object_r:tee_exec:s0
+/(odm|vendor/odm)/bin/miteelog       u:object_r:tee_exec:s0
 /dev/tee0 u:object_r:mitee_client_device:s0
 /dev/teepriv0 u:object_r:mitee_client_device:s0
 /mnt/vendor/persist/bluetooth/\.bt_nv\.bin u:object_r:vendor_myron_bt_mac_file:s0
@@ -198,3 +199,11 @@
 /dev/metis_link u:object_r:migt_dev:s0
 /dev/mi_group u:object_r:migt_dev:s0
 /dev/mi_frameload u:object_r:migt_dev:s0
+
+# Xiaomi VM images
+/(odm|vendor/odm)/firmware_oemvm(/.*)? u:object_r:vendor_vm_file:s0
+/(odm|vendor/odm)/firmware_qtvm(/.*)?  u:object_r:vendor_vm_file:s0
+
+# MiFace
+/(odm|vendor/odm)/bin/hw/mifaced u:object_r:hal_miface_default_exec:s0
+/data/vendor/face(/.*)?         u:object_r:face_vendor_data_file:s0
