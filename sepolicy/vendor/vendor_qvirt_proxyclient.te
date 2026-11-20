@@ -1,3 +1,6 @@
 # Publish VM state and signal MiTEE boot completion.
 set_prop(vendor_qvirt_proxyclient, vendor_mitee_prop)
 set_prop(vendor_qvirt_proxyclient, vendor_mi_qvirtmgr_prop)
+
+# The proxy waits for vendor.all.modules.ready before starting early VMs.
+get_prop(vendor_qvirt_proxyclient, vendor_modprobe_prop)
