@@ -13,6 +13,8 @@ import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.media.AudioManager.AudioPlaybackCallback
 import android.media.AudioPlaybackConfiguration
+import android.media.audiofx.AudioEffect
+import android.os.Build
 import android.os.Handler
 import android.os.UserHandle
 import android.provider.Settings
@@ -42,7 +44,8 @@ import com.nullcode.misound.xiaomi.MiSoundConstants.Companion.dlog
 internal class MiSoundController private constructor(
     private val context: Context
 ) {
-    private var miSoundEffect = MiSoundAudioEffect(EFFECT_PRIORITY, audioSession = 0)
+    private var miSoundEffect: MiSoundAudioEffect? = null
+    private val managesBoseSound = Build.DEVICE == "myron"
     private val audioManager = context.getSystemService(AudioManager::class.java)!!
     private val handler = Handler(context.mainLooper)
     private var settingsObserver: ContentObserver? = null
@@ -68,6 +71,7 @@ internal class MiSoundController private constructor(
     // Re-apply the surround profile on every media session.
     private val playbackCallback = object : AudioPlaybackCallback() {
         override fun onPlaybackConfigChanged(configs: List<AudioPlaybackConfiguration>) {
+            if (!registerCallbacks) return
             val isPlaying = configs.any {
                 it.playerState == AudioPlaybackConfiguration.PLAYER_STATE_STARTED
             }
@@ -84,11 +88,13 @@ internal class MiSoundController private constructor(
     // audio on the new one (e.g. after a wired headset plug)
     private val audioDeviceCallback = object : AudioDeviceCallback() {
         override fun onAudioDevicesAdded(addedDevices: Array<AudioDeviceInfo>) {
+            if (!registerCallbacks) return
             dlog(TAG, "onAudioDevicesAdded")
             applyCurrentProfile(currentMode)
         }
 
         override fun onAudioDevicesRemoved(removedDevices: Array<AudioDeviceInfo>) {
+            if (!registerCallbacks) return
             dlog(TAG, "onAudioDevicesRemoved")
             applyCurrentProfile(currentMode)
         }
@@ -159,6 +165,13 @@ internal class MiSoundController private constructor(
             observer,
             UserHandle.USER_CURRENT,
         )
+        if (managesBoseSound) {
+            context.contentResolver.registerContentObserver(
+                Settings.Global.getUriFor(BOSE_SOUND_SETTING),
+                false,
+                observer,
+            )
+        }
         settingsObserver = observer
         dlog(TAG, "registered Settings.System observers for all misound keys")
     }
@@ -168,7 +181,9 @@ internal class MiSoundController private constructor(
         // "Effectively on" means both the master toggle is on AND the chosen
         // mode isn't 0 (off). Selecting Off in the picker turns the effect
         // off without flipping the master switch.
-        val effective = enabled && mode != MODE_OFF
+        val boseSelected = managesBoseSound &&
+            Settings.Global.getInt(context.contentResolver, BOSE_SOUND_SETTING, 0) == 1
+        val effective = enabled && mode != MODE_OFF && (!managesBoseSound || boseSelected)
         if (effective) {
             applyCurrentProfile(mode)
             registerCallbacks = true
@@ -241,53 +256,51 @@ internal class MiSoundController private constructor(
      * it (another higher-priority app or the system re-claimed the session),
      * this builds a fresh one.
      */
-    private fun checkEffect() {
+    private fun requireEffect(): MiSoundAudioEffect {
+        val existingEffect = miSoundEffect
         val alive = try {
-            miSoundEffect.hasControl()
+            existingEffect?.hasControl() == true
         } catch (t: IllegalStateException) {
             // hasControl() throws if the native handle was already released
             // (e.g. a previous disable path called release()).
             false
         }
-        if (!alive) {
-            Log.w(TAG, "effect not alive or unowned, recreating")
-            try {
-                miSoundEffect.release()
-            } catch (t: Throwable) {
-                // already released
-            }
-            miSoundEffect = MiSoundAudioEffect(EFFECT_PRIORITY, audioSession = 0)
+        if (alive && existingEffect != null) return existingEffect
+
+        release()
+        return MiSoundAudioEffect(EFFECT_PRIORITY, audioSession = 0).also {
+            miSoundEffect = it
         }
     }
 
     private fun applyCurrentProfile(mode: Int, force: Boolean = true) {
         dlog(TAG, "applyCurrentProfile(mode=$mode, force=$force)")
         try {
-            checkEffect()
-            if (!force && miSoundEffect === lastPushedEffect &&
-                mode == lastPushedMode && current3dSurround == lastPushed3d
-            ) {
-                dlog(TAG, "applyCurrentProfile: unchanged, skipping")
-                return
-            }
-            miSoundEffect.superEffectProfile = mode
-        } catch (t: Throwable) {
-            // Don't let a transient audio HAL hiccup crash the boot receiver.
-            Log.e(TAG, "applyCurrentProfile failed", t)
-        }
-        // Push the 3D surround toggle. Wrapped so a missing param id on a
-        // future vendor blob doesn't tear down the rest of the pipeline.
-        applySubToggle(MISOUND_PARAM_3DSURROUND, current3dSurround, "3dSurround")
-        lastPushedEffect = miSoundEffect
-        lastPushedMode = mode
-        lastPushed3d = current3dSurround
-    }
+            // A callback queued before unregistering can arrive after switching to Dolby.
+            if (managesBoseSound &&
+                Settings.Global.getInt(context.contentResolver, BOSE_SOUND_SETTING, 0) != 1
+            ) return
 
-    private fun applySubToggle(param: Int, value: Int, label: String) {
-        try {
-            miSoundEffect.setBooleanParam(param, value == 1)
-        } catch (t: Throwable) {
-            Log.e(TAG, "applySubToggle($label) failed", t)
+            val effect = requireEffect()
+            if (!force && effect === lastPushedEffect &&
+                mode == lastPushedMode && current3dSurround == lastPushed3d
+            ) return
+
+            // In HOC4 the Bose choice enables this effect on the output mix.
+            effect.superEffectProfile = mode
+            if (managesBoseSound && !effect.enabled) {
+                check(effect.setEnabled(true) == AudioEffect.SUCCESS)
+            }
+            try {
+                effect.setBooleanParam(MISOUND_PARAM_3DSURROUND, current3dSurround == 1)
+            } catch (e: RuntimeException) {
+                Log.w(TAG, "Could not apply MiSound surround setting", e)
+            }
+            lastPushedEffect = effect
+            lastPushedMode = mode
+            lastPushed3d = current3dSurround
+        } catch (e: RuntimeException) {
+            Log.e(TAG, "applyCurrentProfile failed", e)
         }
     }
 
@@ -318,15 +331,22 @@ internal class MiSoundController private constructor(
     }
 
     private fun release() {
+        val effect = miSoundEffect ?: return
+        miSoundEffect = null
+        lastPushedEffect = null
         try {
-            miSoundEffect.release()
-        } catch (t: Throwable) {
-            // Effect was already released; nothing to do.
+            if (managesBoseSound && effect.hasControl()) effect.setEnabled(false)
+        } catch (e: IllegalStateException) {
+            Log.w(TAG, "MiSound effect is no longer active", e)
+        } finally {
+            effect.release()
         }
     }
 
     companion object {
         private const val TAG = "MiSoundController"
+        // Also written by LunarisDolby on Myron.
+        private const val BOSE_SOUND_SETTING = "myron_bose_sound"
 
         @Volatile
         private var instance: MiSoundController? = null
