@@ -9,6 +9,7 @@ package com.nullcode.misound.xiaomi
 import android.content.Context
 import android.database.ContentObserver
 import android.hardware.display.DisplayManager
+import android.media.AudioAttributes
 import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
@@ -81,6 +82,7 @@ internal class MiSoundEqController private constructor(private val context: Cont
 
     /** Re-reads settings and pushes them to the engine for the active profile. */
     private fun applyEq() {
+        if (audioManager.mode != AudioManager.MODE_NORMAL) return
         val resolver = context.contentResolver
         val s = EqSettings.active(resolver)
         dlog(
@@ -136,6 +138,9 @@ internal class MiSoundEqController private constructor(private val context: Cont
         bassEffect.applyCommonEq(b.commonEqEnabled, b.commonPreamp, b.commonGains)
     }
 
+    private fun AudioDeviceInfo.isMediaOutput(): Boolean =
+        isSink && type != AudioDeviceInfo.TYPE_BLUETOOTH_SCO
+
     private fun registerCallbacks() {
         if (registered) return
         val resolver = context.contentResolver
@@ -156,8 +161,13 @@ internal class MiSoundEqController private constructor(private val context: Cont
         settingsObserver = observer
 
         val devCb = object : AudioDeviceCallback() {
-            override fun onAudioDevicesAdded(addedDevices: Array<AudioDeviceInfo>) = evaluateOutput()
-            override fun onAudioDevicesRemoved(removedDevices: Array<AudioDeviceInfo>) = evaluateOutput()
+            override fun onAudioDevicesAdded(addedDevices: Array<AudioDeviceInfo>) {
+                if (addedDevices.any { it.isMediaOutput() }) evaluateOutput()
+            }
+
+            override fun onAudioDevicesRemoved(removedDevices: Array<AudioDeviceInfo>) {
+                if (removedDevices.any { it.isMediaOutput() }) evaluateOutput()
+            }
         }
         audioManager.registerAudioDeviceCallback(devCb, handler)
         deviceCallback = devCb
@@ -167,7 +177,11 @@ internal class MiSoundEqController private constructor(private val context: Cont
         // it never stays dead while the EQ is enabled.
         val playCb = object : AudioManager.AudioPlaybackCallback() {
             override fun onPlaybackConfigChanged(configs: List<AudioPlaybackConfiguration>) {
-                if (configs.any { it.playerState == AudioPlaybackConfiguration.PLAYER_STATE_STARTED }) {
+                if (configs.any {
+                    it.playerState == AudioPlaybackConfiguration.PLAYER_STATE_STARTED &&
+                        (it.audioAttributes.usage == AudioAttributes.USAGE_MEDIA ||
+                            it.audioAttributes.usage == AudioAttributes.USAGE_GAME)
+                }) {
                     // Re-detect the route too: the routed output can change
                     // (e.g. an explicit routing request) without any device
                     // being added or removed.
@@ -226,6 +240,7 @@ internal class MiSoundEqController private constructor(private val context: Cont
      * previous channels.
      */
     private fun evaluateOutput() {
+        if (audioManager.mode != AudioManager.MODE_NORMAL) return
         val resolver = context.contentResolver
         RouteProfiles.update(context)
         val profile = RouteProfiles.currentId(resolver)

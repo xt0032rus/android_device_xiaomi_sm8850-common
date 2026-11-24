@@ -8,6 +8,7 @@ package com.nullcode.misound.xiaomi
 
 import android.content.Context
 import android.database.ContentObserver
+import android.media.AudioAttributes
 import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
@@ -49,6 +50,7 @@ internal class MiSoundController private constructor(
     private val audioManager = context.getSystemService(AudioManager::class.java)!!
     private val handler = Handler(context.mainLooper)
     private var settingsObserver: ContentObserver? = null
+    private var mediaOutput: Pair<Int, String>? = null
 
     // Most recent mode applied to the effect. The playback/device callbacks
     // re-apply this on every session change so a runtime change of mode or
@@ -73,11 +75,13 @@ internal class MiSoundController private constructor(
         override fun onPlaybackConfigChanged(configs: List<AudioPlaybackConfiguration>) {
             if (!registerCallbacks) return
             val isPlaying = configs.any {
-                it.playerState == AudioPlaybackConfiguration.PLAYER_STATE_STARTED
+                it.playerState == AudioPlaybackConfiguration.PLAYER_STATE_STARTED &&
+                    (it.audioAttributes.usage == AudioAttributes.USAGE_MEDIA ||
+                        it.audioAttributes.usage == AudioAttributes.USAGE_GAME)
             }
             dlog(TAG, "onPlaybackConfigChanged: isPlaying=$isPlaying")
             if (isPlaying) {
-                applyCurrentProfile(currentMode, force = false)
+                refreshMediaOutput(checkEffect = true)
             }
         }
     }
@@ -88,16 +92,30 @@ internal class MiSoundController private constructor(
     // audio on the new one (e.g. after a wired headset plug)
     private val audioDeviceCallback = object : AudioDeviceCallback() {
         override fun onAudioDevicesAdded(addedDevices: Array<AudioDeviceInfo>) {
-            if (!registerCallbacks) return
-            dlog(TAG, "onAudioDevicesAdded")
-            applyCurrentProfile(currentMode)
+            if (addedDevices.any { it.isMediaOutput() }) refreshMediaOutput()
         }
 
         override fun onAudioDevicesRemoved(removedDevices: Array<AudioDeviceInfo>) {
-            if (!registerCallbacks) return
-            dlog(TAG, "onAudioDevicesRemoved")
-            applyCurrentProfile(currentMode)
+            if (removedDevices.any { it.isMediaOutput() }) refreshMediaOutput()
         }
+    }
+
+    private fun AudioDeviceInfo.isMediaOutput(): Boolean =
+        isSink && type != AudioDeviceInfo.TYPE_BLUETOOTH_SCO
+
+    private fun refreshMediaOutput(checkEffect: Boolean = false) {
+        if (!registerCallbacks || audioManager.mode != AudioManager.MODE_NORMAL) return
+        val routed = try {
+            audioManager.getDevicesForAttributes(MEDIA_ATTRIBUTES)
+                .firstOrNull { it.type != AudioDeviceInfo.TYPE_BLUETOOTH_SCO }
+        } catch (e: RuntimeException) {
+            Log.w(TAG, "Could not read media output", e)
+            null
+        } ?: return
+        val output = routed.type to routed.address
+        val changed = mediaOutput != output
+        if (changed || checkEffect) applyCurrentProfile(currentMode, force = changed)
+        mediaOutput = output
     }
 
     private var registerCallbacks = false
@@ -188,6 +206,7 @@ internal class MiSoundController private constructor(
             applyCurrentProfile(mode)
             registerCallbacks = true
         } else {
+            mediaOutput = null
             registerCallbacks = false
             release()
         }
@@ -274,6 +293,7 @@ internal class MiSoundController private constructor(
     }
 
     private fun applyCurrentProfile(mode: Int, force: Boolean = true) {
+        if (audioManager.mode != AudioManager.MODE_NORMAL) return
         dlog(TAG, "applyCurrentProfile(mode=$mode, force=$force)")
         try {
             // A callback queued before unregistering can arrive after switching to Dolby.
@@ -345,6 +365,10 @@ internal class MiSoundController private constructor(
 
     companion object {
         private const val TAG = "MiSoundController"
+        private val MEDIA_ATTRIBUTES = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_MEDIA)
+            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+            .build()
         // Also written by LunarisDolby on Myron.
         private const val BOSE_SOUND_SETTING = "myron_bose_sound"
 
