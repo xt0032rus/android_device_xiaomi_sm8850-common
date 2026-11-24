@@ -331,6 +331,7 @@ internal class MiSoundEqController private constructor(private val context: Cont
             SETTING_KEY_EQ_APPLY_EAR,
             SETTING_KEY_EQ_APPLY_BOTTOM,
             SETTING_KEY_EQ_AUTO_ROTATE,
+            MiSoundConstants.SETTING_KEY_EQ_AUTO_HEADROOM,
             SETTING_KEY_EQ_AUTO_SUSPEND,
             SETTING_KEY_EQ_PREAMP,
             SETTING_KEY_EQ_BAND_COUNT,

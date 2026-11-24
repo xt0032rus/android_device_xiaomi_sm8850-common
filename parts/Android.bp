@@ -3,10 +3,30 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+soong_config_module_type {
+    name: "xiaomi_parts_audio_defaults",
+    module_type: "java_defaults",
+    config_namespace: "xiaomi_parts",
+    bool_variables: ["unified_audio"],
+    properties: ["additional_manifests"],
+}
+
+xiaomi_parts_audio_defaults {
+    name: "xiaomi_parts_audio_settings",
+    soong_config_variables: {
+        unified_audio: {
+            additional_manifests: [],
+            conditions_default: {
+                additional_manifests: ["AndroidManifest.misound.xml"],
+            },
+        },
+    },
+}
+
 android_app {
     name: "XiaomiParts",
     certificate: "platform",
-    defaults: ["SettingsLibDefaults"],
+    defaults: ["SettingsLibDefaults", "xiaomi_parts_audio_settings"],
     srcs: ["src/**/*.kt"],
     platform_apis: true,
     privileged: true,

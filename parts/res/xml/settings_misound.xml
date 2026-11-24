@@ -29,7 +29,9 @@
         android:summary="@string/misound_3d_surround_summary"
         android:defaultValue="false" />
 
-    <PreferenceCategory android:title="@string/eq_category_title">
+    <PreferenceCategory
+        android:key="misound_eq_category"
+        android:title="@string/eq_category_title">
 
         <Preference
             android:key="misound_eq_output"
@@ -46,6 +48,13 @@
             android:title="@string/eq_enabled_title"
             android:summary="@string/eq_enabled_summary"
             android:defaultValue="true" />
+
+        <SwitchPreferenceCompat
+            android:key="misound_eq_auto_headroom"
+            android:dependency="misound_eq_enabled"
+            android:persistent="false"
+            android:title="@string/eq_auto_headroom_title"
+            android:summary="@string/eq_auto_headroom_summary" />
 
         <SwitchPreferenceCompat
             android:key="misound_eq_apply_ear"

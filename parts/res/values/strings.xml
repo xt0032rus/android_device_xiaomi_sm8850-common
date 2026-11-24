@@ -77,4 +77,8 @@
     <string name="eq_route_paused_hint">Processing is paused for external outputs. Switch back to the built-in speakers and turn off \"Off while using headphones\" to use per-device settings.</string>
     <string name="eq_route_active_hint">Changes are saved for this device only. Left/right stay fixed when the screen rotates. New devices start with processing off and a flat profile.</string>
     <string name="eq_route_weak_hint">This device has no unique address, so it is identified by type and name. Identically named devices and passive wired headphones may share one profile.</string>
+    <string name="bose_settings_title">Bose settings</string>
+    <string name="audio_output_settings_title">Output calibration</string>
+    <string name="eq_auto_headroom_title">Automatic headroom</string>
+    <string name="eq_auto_headroom_summary">Lower the EQ input level when bands are boosted to reduce clipping</string>
 </resources>

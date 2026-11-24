@@ -88,6 +88,7 @@ class MiSoundConstants {
         const val SETTING_KEY_EQ_APPLY_BOTTOM = "misound_eq_apply_bottom"
 
         // Behaviour toggles.
+        const val SETTING_KEY_EQ_AUTO_HEADROOM = "misound_eq_auto_headroom"
         const val SETTING_KEY_EQ_AUTO_ROTATE = "misound_eq_auto_rotate"
         const val SETTING_KEY_EQ_AUTO_SUSPEND = "misound_eq_auto_suspend"
 

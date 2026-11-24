@@ -9,6 +9,8 @@ package com.nullcode.misound.xiaomi
 import android.content.Context
 import android.hardware.display.DisplayManager
 import android.media.audiofx.DynamicsProcessing
+import android.os.UserHandle
+import android.provider.Settings
 import android.util.Log
 import android.view.Display
 import android.view.Surface
@@ -29,6 +31,7 @@ import android.view.Surface
 internal object MiSoundEqEngine {
     private const val TAG = "MiSoundEqEngine"
     private const val CHANNELS = 2
+    private var headroomAttenuation = 0f
 
     /** Per-channel profile: preamp + interpolated gains on the internal grid. null = flat. */
     private class Prof(val preamp: Float, val gains: FloatArray)
@@ -81,6 +84,20 @@ internal object MiSoundEqEngine {
         if (s.applyEarpiece) arr[earPhys] = Prof(s.preampOf(0), EqBands.interpolate(s.gainsOf(0)))
         if (s.applyBottom) arr[botPhys] = Prof(s.preampOf(1), EqBands.interpolate(s.gainsOf(1)))
         chanProf = arr
+
+        // Use the same attenuation on both channels to preserve stereo balance.
+        // This estimates the needed headroom for this EQ stage only.
+        val resolver = appContext?.contentResolver
+        val automatic = resolver != null && Settings.System.getIntForUser(
+            resolver, MiSoundConstants.SETTING_KEY_EQ_AUTO_HEADROOM, 0, UserHandle.USER_CURRENT,
+        ) == 1
+        headroomAttenuation = if (automatic) {
+            arr.filterNotNull().maxOfOrNull { profile ->
+                (profile.preamp + (profile.gains.maxOrNull() ?: 0f)).coerceAtLeast(0f)
+            } ?: 0f
+        } else {
+            0f
+        }
     }
 
     /**
@@ -158,7 +175,7 @@ internal object MiSoundEqEngine {
         }
     }
 
-    private fun inputGain(ch: Int): Float = chanProf[ch]?.preamp ?: 0f
+    private fun inputGain(ch: Int): Float = (chanProf[ch]?.preamp ?: 0f) - headroomAttenuation
 
     private fun makeEq(ch: Int): DynamicsProcessing.Eq {
         val p = chanProf[ch]

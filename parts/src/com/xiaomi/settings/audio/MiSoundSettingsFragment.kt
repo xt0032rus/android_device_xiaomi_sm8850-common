@@ -5,6 +5,7 @@
 
 package com.xiaomi.settings.audio
 
+import android.os.Build
 import android.os.Bundle
 import android.os.UserHandle
 import android.provider.Settings
@@ -34,6 +35,7 @@ class MiSoundSettingsFragment :
 
         // Earpiece EQ keys (read/written by the XiaomiMiSound controller).
         private const val EQ_ENABLED_KEY = "misound_eq_enabled"
+        private const val EQ_AUTO_HEADROOM_KEY = "misound_eq_auto_headroom"
         private const val EQ_APPLY_EAR_KEY = "misound_eq_apply_ear"
         private const val EQ_APPLY_BOTTOM_KEY = "misound_eq_apply_bottom"
         private const val EQ_AUTO_ROTATE_KEY = "misound_eq_auto_rotate"
@@ -58,6 +60,16 @@ class MiSoundSettingsFragment :
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         Log.d(TAG, "onCreatePreferences")
         setPreferencesFromResource(R.xml.settings_misound, rootKey)
+        val page = arguments?.getString(MiSoundSettingsActivity.AUDIO_PAGE)
+        val unifiedMyron = Build.DEVICE == "myron"
+        findPreference<Preference>("misound_eq_category")?.isVisible = page != "bose"
+        findPreference<Preference>(SETTING_KEY)?.isVisible = !unifiedMyron && page != "calibration"
+        findPreference<Preference>(MODE_SETTING_KEY)?.isVisible = page != "calibration"
+        findPreference<Preference>(SETTING_KEY_3D_SURROUND)?.isVisible = page != "calibration"
+        if (unifiedMyron) {
+            findPreference<Preference>(MODE_SETTING_KEY)?.dependency = null
+            findPreference<Preference>(SETTING_KEY_3D_SURROUND)?.dependency = null
+        }
 
         val isEnabled = Settings.System.getIntForUser(
             requireContext().contentResolver,
@@ -79,12 +91,21 @@ class MiSoundSettingsFragment :
 
         val modePref = findPreference<ListPreference>(MODE_SETTING_KEY)
         modePref?.apply {
-            value = currentMode.toString()
+            if (unifiedMyron) {
+                entries = entries.drop(1).toTypedArray()
+                entryValues = entryValues.drop(1).toTypedArray()
+            }
+            value = if (unifiedMyron && currentMode !in 1..2) {
+                DEFAULT_MODE.toString()
+            } else {
+                currentMode.toString()
+            }
             summary = entry
             onPreferenceChangeListener = this@MiSoundSettingsFragment
         }
 
         bindToggle(SETTING_KEY_3D_SURROUND)
+        bindToggle(EQ_AUTO_HEADROOM_KEY)
 
         bindEqToggle(EQ_ENABLED_KEY)
         bindEqToggle(EQ_APPLY_EAR_KEY)
@@ -372,7 +393,7 @@ class MiSoundSettingsFragment :
                 s.applyBottom = newValue as Boolean
                 Log.d(TAG, "$EQ_APPLY_BOTTOM_KEY -> $newValue (profile=${s.profileId})")
             }
-            EQ_AUTO_ROTATE_KEY, EQ_AUTO_SUSPEND_KEY -> {
+            EQ_AUTO_ROTATE_KEY, EQ_AUTO_SUSPEND_KEY, EQ_AUTO_HEADROOM_KEY -> {
                 // Device-wide controls, always written to the global keys.
                 Settings.System.putIntForUser(
                     requireContext().contentResolver,

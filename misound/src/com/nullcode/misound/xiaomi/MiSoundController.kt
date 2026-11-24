@@ -195,15 +195,17 @@ internal class MiSoundController private constructor(
     }
 
     private fun applyState(enabled: Boolean, mode: Int) {
-        currentMode = mode
         // "Effectively on" means both the master toggle is on AND the chosen
         // mode isn't 0 (off). Selecting Off in the picker turns the effect
         // off without flipping the master switch.
         val boseSelected = managesBoseSound &&
             Settings.Global.getInt(context.contentResolver, BOSE_SOUND_SETTING, 0) == 1
-        val effective = enabled && mode != MODE_OFF && (!managesBoseSound || boseSelected)
+        // On Myron the effect selector is the master switch. Treat the
+        // legacy Off profile as the default Bose tuning if Bose is selected.
+        val effective = if (managesBoseSound) boseSelected else enabled && mode != MODE_OFF
+        currentMode = if (managesBoseSound && mode == MODE_OFF) DEFAULT_MODE else mode
         if (effective) {
-            applyCurrentProfile(mode)
+            applyCurrentProfile(currentMode)
             registerCallbacks = true
         } else {
             mediaOutput = null
