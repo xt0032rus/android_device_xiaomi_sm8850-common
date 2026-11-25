@@ -742,6 +742,9 @@ vendor/lib64/libdfintf.so
 vendor/lib64/vendor.xiaomi.hardware.displayfeature_aidl-V2-ndk.so
 
 # Dolby
+vendor/bin/hw/vendor.dolby.dms.service
+vendor/etc/init/dms-service.rc
+vendor/etc/vintf/manifest/dms-service.xml
 vendor/lib64/libcodec2_soft_ac4dec.so
 vendor/lib64/libcodec2_soft_ddpdec.so
 vendor/lib64/libdapparamstorage.so
