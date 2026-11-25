@@ -325,10 +325,6 @@ PRODUCT_PACKAGES += \
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/rootdir/etc/fstab.qcom:$(TARGET_COPY_OUT_VENDOR_RAMDISK)/first_stage_ramdisk/fstab.qcom
 
-# MiSound
-PRODUCT_PACKAGES += \
-    XiaomiMiSound
-
 # Parts
 PRODUCT_PACKAGES += \
     XiaomiParts
@@ -461,10 +457,6 @@ PRODUCT_PACKAGES += \
     firmware_wlan_mac.bin_symlink \
     firmware_WCNSS_qcom_cfg.ini_symlink
 
-# LunarisDolby
-# Shipping devices use the AIDL DMS service from the vendor image.
-TARGET_DOLBY_SKIP_LEGACY_DMS := true
-$(call inherit-product, vendor/lunaris/dolby/dolby.mk)
 
 # Block GKI modules superseded by platform-specific modules.
 ifeq ($(TARGET_OPT_IN_OSS_KERNEL),true)
