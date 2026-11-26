@@ -65,3 +65,6 @@ allow hal_camera_default vendor_sysfs_kgsl:lnk_file r_file_perms;
 
 dontaudit hal_camera_default fs_bpf:dir search;
 dontaudit hal_camera_default fs_bpf_vendor:dir search;
+
+# The camera performance client reads cpu.shares and cpuset placement.
+allow hal_camera_default cgroup:file read;
