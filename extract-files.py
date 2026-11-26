@@ -78,6 +78,8 @@ lib_fixups: lib_fixups_user_type = {
 }
 
 blob_fixups: blob_fixups_user_type = {
+    'vendor/bin/wfdhdcphalservice': blob_fixup()
+        .add_needed('libwfdhdcp_persist.so'),
     'vendor/etc/init/vppservice.rc': blob_fixup()
         .regex_replace(r'(\n[ \t]*)oneshot', r'\1oneshot\1disabled')
         .add_line_if_missing('on property:init.svc.vendor.cdsprpcd=running')

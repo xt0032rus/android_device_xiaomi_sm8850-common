@@ -1,0 +1,10 @@
+// SPDX-License-Identifier: Apache-2.0
+
+cc_library_shared {
+    name: "libwfdhdcp_persist",
+    vendor: true,
+    compile_multilib: "64",
+    srcs: ["wfdhdcp_persist.cpp"],
+    shared_libs: ["libbinder_ndk"],
+    cflags: ["-Wall", "-Wextra", "-Werror"],
+}
