@@ -1,4 +1,5 @@
 # Read-only HyperOS settings queried by the vendor radio and audio HALs.
+ro.miui.ui.version.code u:object_r:exported_system_prop:s0 exact int
 ro.miui.customized.region u:object_r:exported_system_prop:s0 exact string
 ro.miui.support_submix_multichannel u:object_r:exported_system_prop:s0 exact bool
 
