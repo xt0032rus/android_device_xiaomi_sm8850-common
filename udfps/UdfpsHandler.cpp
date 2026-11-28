@@ -8,6 +8,7 @@
 
 #include <aidl/android/hardware/biometrics/fingerprint/BnFingerprint.h>
 #include <android-base/logging.h>
+#include <android-base/properties.h>
 #include <android-base/unique_fd.h>
 
 #include <android/looper.h>
@@ -87,6 +88,14 @@ class XiaomiSM8850UdfpsHander : public UdfpsHandler {
 
     void init(fingerprint_device_t* device) {
         mDevice = device;
+
+        // Myron's long-press sensor lets SystemUI honor the screen-off unlock
+        // setting. Do not race it with a second scanner or inject KEY_WAKEUP.
+        mFrameworkGestures = android::base::GetBoolProperty("ro.vendor.sensors.xiaomi.udfps", false);
+        if (mFrameworkGestures) {
+            LOG(INFO) << "Screen-off fingerprint gestures are owned by SystemUI";
+            return;
+        }
 
         mUinputFd.reset(open("/dev/uinput", O_WRONLY | O_NONBLOCK));
         if (mUinputFd.get() < 0) {
@@ -223,6 +232,7 @@ class XiaomiSM8850UdfpsHander : public UdfpsHandler {
 
   private:
     fingerprint_device_t* mDevice;
+    bool mFrameworkGestures = false;
     android::base::unique_fd mUinputFd;
     std::mutex mFingerDownMutex;
     bool mFingerDown = false;
@@ -531,6 +541,7 @@ class XiaomiSM8850UdfpsHander : public UdfpsHandler {
     }
 
     void setFodStatus(int value) {
+        if (mFrameworkGestures) return;
         set(FOD_STATUS_PATH, value);
     }
 

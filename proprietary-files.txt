@@ -182,7 +182,7 @@ vendor/lib64/libmcs.so
 vendor/lib64/libmikaraoke.so
 vendor/lib64/libmis6.so
 vendor/lib64/libmisfpsop.so
-vendor/lib64/libmisight.so
+vendor/lib64/libmisight.so;RECOVERY_AVAILABLE
 vendor/lib64/libmisops.so
 vendor/lib64/libmisoundfx_aosp_aidl_ext.so;SYMLINK=vendor/lib64/soundfx/libmisoundfx_aosp_aidl.so
 vendor/lib64/libmisoundsa_multichannel.so
@@ -1942,3 +1942,6 @@ vendor/lib64/vendor.qti.hardware.wifidisplaysessionl@1.0-halimpl.so
 
 # Xiaomi MAC address
 vendor/bin/nv_mac
+
+# Touchscreen (Recovery)
+odm/lib64/libtensorflowlite_touch_c.so:recovery/root/vendor/odm/lib64/libtensorflowlite_touch_c.so;MAKE_COPY_RULE_ONLY
